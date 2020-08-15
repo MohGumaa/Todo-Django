@@ -1,0 +1,28 @@
+{% extends "task/base.html" %}
+
+{% block content %}
+    <h1 id="head-title" class="box text-center">{{ today_date|date:"l, d M" }}</h1>
+    <div class="box">
+        {% for task in tasks %}
+            <div class="d-flex align-items-center my-4 item pb-2">
+                <input type="checkbox" class="mr-3">
+                <span>{{ task|title }}</span>
+                <form action="{% url 'delete' task.id %}" method="post" class="ml-auto">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-danger btn-sm px-3">-</button>
+                    <button class="btn btn-outline-primary btn-sm ml-2 px-3">Update</button>
+                </form>
+            </div>
+        {% empty %}
+            <h3>Add Your First Task</h3>
+        {% endfor%}
+
+        <form method="post" class="text-center">
+            {% csrf_token %}
+            {{ u_form.title }}
+            <button type="submit" class="add-item">+</button>
+        </form>
+    </div>
+{% endblock content%}
+
+
