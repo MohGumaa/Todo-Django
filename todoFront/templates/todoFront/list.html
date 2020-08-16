@@ -96,6 +96,9 @@
       const form  = document.querySelector('#form');
       const title  = document.querySelector('#title');
       let url = 'http://127.0.0.1:8000/api';
+      let actieItem = null;
+      let todo_id;
+      let todos;
 
       function getCookie(name) {
           let cookieValue = null;
@@ -121,11 +124,13 @@
         fetch(`${url}/task-list/`)
           .then(res => res.json())
           .then(data => {
+            todos = data;
             let output = ''
-            data.map(list => {
+            todos.map(list => {
+              let title = list.completed ? `<strike class="title">${list.title}</strike>` : `<span class="title">${list.title}</span>`;
                output += `<div id="data-row-${list.id}" class="task-wrapper flex-wrapper">
                   <div style="flex:7">
-                    <span class="title">${list.title}</span>
+                    ${title}
                   </div>
                   <div style="flex:1">
                     <button class="btn btn-outline-info btn-sm edit">Edit</button>
@@ -134,16 +139,26 @@
                     <button class="btn btn-outline-danger btn-sm delete">-</button>
                   </div>
                 </div>
-              `
-
+              `;
             });
             wrapper.innerHTML = output;
           })
       }
 
+      // Form edit item
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        fetch(`${url}/task-create/`, {
+        let request;
+
+        // Check if new item or edit
+        if(actieItem != null) {
+          request = `${url}/task-update/${todo_id}/`;
+          actieItem = null;
+        } else {
+          request = `${url}/task-create/`
+        }
+
+        fetch(request, {
           method: 'POST',
           "headers": {
             'Content-type': 'application/json',
@@ -157,17 +172,41 @@
 
      // Edit Item
      wrapper.addEventListener('click', (e) => {
-      if (e.target.classList.contains('edit')){
-        const target_element = e.target.parentElement.parentElement;
-        const tar = target_element.id.split('-')
-        console.log(ele_id[2])
-      } else  {
-        console.log(e.target.getAttribute('class'))
+        if (e.target.classList.contains('edit')){
+          const target_element = e.target.parentElement.parentElement;
+          actieItem = target_element.childNodes[1].innerText;
+          todo_id = target_element.id.split('-')[2];
+          title.value = actieItem;
+        } else if (e.target.classList.contains('delete')){
+          const todo_delete_id = e.target.parentElement.parentElement.id.split('-')[2];
+          fetch(`${url}/task-delete/${todo_delete_id}/`, {
+            method: 'DELETE',
+            "headers": {
+               'Content-type': 'application/json',
+               'X-CSRFToken': csrftoken
+            }
+          }).then(response => {
+            buildList();
+          })
 
+        } else if(e.target.classList.contains('title')){
+          const strike_id = e.target.parentElement.parentElement.id.split('-')[2];
+          const item = todos.filter(todo => todo.id == +strike_id)
+          fetch(`${url}/task-update/${strike_id}/`, {
+            method: 'POST',
+            "headers": {
+               'Content-type': 'application/json',
+               'X-CSRFToken': csrftoken
+            }, body: JSON.stringify({'title': item[0].title, 'completed': !item[0].completed})
+          }).then(response => {
+            buildList();
+          })
+          console.log()
+        }
       }
+     );
 
-     })
-      buildList()
+    buildList()
     </script>
 
     <!-- Optional JavaScript -->

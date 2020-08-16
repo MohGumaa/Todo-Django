@@ -39,18 +39,16 @@ def taskCreate(request):
         serializer.save()
     return Response(serializer.data)
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def taskUpdate(request ,pk):
     task = get_object_or_404(Task, id=pk)
     if request.method == 'POST':
-        data = JSONParser().parse(request.data)
-        serializer = TaskSerializers(task, data=data)
+        serializer = TaskSerializers(instance=task, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
     else:
         serializer = TaskSerializers(instance=task)
-
     return Response(serializer.data)
 
 
